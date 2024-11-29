@@ -16,6 +16,7 @@ This document outlines the data preprocessing steps implemented for the **TripAd
 Two datasets are used:
 1. **Hotels Dataset (`offerings.csv`)**
 2. **Reviews Dataset (`reviews.csv`)**
+
 Download the dataset TripAdvisor Hotel Review from Kaggle :
 [TripAdvisor Hotel Review Dataset](https://www.kaggle.com/datasets/joebeachcapital/hotel-reviews/data)
 
