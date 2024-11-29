@@ -1,186 +1,102 @@
+# NLP for TripAdvisor Recommendation Challenge
 
-# Natural Language Processing : TripAdvisor Recommendation Challenge 
-
-## Beating BM25 
+This repository contains a Jupyter Notebook focused on solving the TripAdvisor Recommendation Challenge using Natural Language Processing (NLP) techniques. It integrates various stages of preprocessing, data handling, and model implementation to generate recommendations based on user reviews.
 
 The objective of this challenge is to create a unique recommendation system for TripAdvisor reviews. This involves utilizing a range of pre-treatments and vocabulary manipulation techniques on the reviews. Both pre-trained machine learning models and custom-developed models will be employed as needed. By integrating various methodologies, this approach aims to optimize the recommendation process while adhering to the constraint of not using direct supervised learning to predict the best place based on a specific query.
 
-## Data Preprocessing 
+## Project Overview
+The objective of this notebook is to apply NLP techniques to analyze user reviews and recommend hotels. Specifically, it explores the BM25 algorithm and compares it with a custom-built model.
 
-### Overview
+## Table of Contents
+1. [Getting Started](#getting-started)
+2. [Notebook Features](#notebook-features)
+3. [Dependencies](#dependencies)
+4. [Data Preprocessing](#data-preprocessing)
+5. [Modeling](#modeling)
+6. [Results](#results)
+7. [How to Use](#how-to-use)
+8. [Acknowledgments](#acknowledgments)
+9. [Authors](#authors)
+
+## Getting Started
+To get started, clone this repository and open the notebook in your preferred Jupyter environment. Make sure all dependencies are installed (see [Dependencies](#dependencies)).
+
+## Notebook Features
+- **Natural Language Processing (NLP):** Implements core NLP tasks to preprocess and analyze text data from TripAdvisor.
+- **BM25 Algorithm:** Uses the `rank_bm25` library to perform relevance scoring for recommendations.
+- **Custom Model Comparison:** Benchmarks BM25 against a custom model developed in the notebook.
+- **Data Handling:** Downloads and preprocesses hotel and review datasets, merging them for effective analysis.
+
+### Key Sections
+1. **Installing BM25:** Guides installation and setup of the BM25 library.
+2. **Download Data:** Uses Kaggle API to fetch the necessary datasets.
+3. **Data Preprocessing:** Handles cleaning and preparation of datasets, including:
+   - **Hotels**: Metadata and attributes.
+   - **Reviews**: Text reviews for recommendation modeling.
+4. **Datasets Merging:** Combines datasets to create a unified input for modeling.
+5. **Modeling:** Compares BM25 and a custom model for relevance scoring.
+
+## Dependencies
+The notebook uses the following Python libraries:
+- `pandas`: Data manipulation and analysis
+- `numpy`: Numerical operations
+- `re`: Regular expressions for text preprocessing
+- `json`: Parsing and managing JSON data
+- `rank_bm25`: BM25 algorithm for relevance ranking
+- `kagglehub`: Accessing Kaggle datasets
+
+### Installation
+To install the required dependencies, run:
+```bash
+pip install pandas numpy rank_bm25 kagglehub
+```
+
+## Data Preprocessing
 This document outlines the data preprocessing steps implemented for the **TripAdvisor Recommendation Challenge** project. The goal is to prepare the data for building and evaluating models, including a baseline BM25 model and a custom recommendation approach.
-
----
 
 ### Data Sources
 Two datasets are used:
 1. **Hotels Dataset (`offerings.csv`)**
 2. **Reviews Dataset (`reviews.csv`)**
 
-Download the dataset TripAdvisor Hotel Review from Kaggle :
+Download the dataset TripAdvisor Hotel Review from Kaggle:
 [TripAdvisor Hotel Review Dataset](https://www.kaggle.com/datasets/joebeachcapital/hotel-reviews/data)
 
----
+The notebook focuses on cleaning and structuring datasets for analysis:
+- **Hotel Data:** Includes attributes such as location, amenities, and ratings.
+- **Review Data:** Processes raw text reviews to remove noise and prepare inputs for the models.
+- **Merging:** Combines the hotel and review datasets for a holistic analysis.
 
-### Steps Performed
+## Modeling
+### BM25 Algorithm
+The BM25 algorithm is implemented using the `rank_bm25` library to score the relevance of reviews to user queries. 
 
-#### 1. Loading Datasets
-- Both datasets are loaded using the `pandas` library.
-- `data_hotels` and `data_reviews` are created to hold the respective data.
+### Custom Model
+A tailored model is developed to benchmark against BM25, leveraging additional features from the dataset.
 
-```python
-import pandas as pd
+## Results
+The notebook provides insights into:
+- How BM25 performs in recommending hotels based on reviews.
+- The effectiveness of a custom-built model compared to BM25.
 
-data_hotels = pd.read_csv('../offerings.csv')
-data_reviews = pd.read_csv('../reviews.csv')
-```
+## How to Use
+1. Clone the repository and navigate to the notebook directory:
+   ```bash
+   git clone https://github.com/BastienCherel/TripAdvisor-Recommendation-Challenge
+   cd TripAdvisor-Recommendation-Challenge
+   ```
+2. Install the dependencies as listed above.
+3. Open the notebook in Jupyter or Google Colab.
+4. Run the cells sequentially to reproduce the results.
 
----
-
-#### 2. Dropping Irrelevant Columns
-
-##### Reviews Dataset
-Columns not directly relevant for the modeling task are removed:
-- Dropped columns: `id`, `via_mobile`, `author`, `date`, `date_stayed`, `num_helpful_votes`, `title`.
-
-```python
-data_reviews = data_reviews.drop(columns=["id", "via_mobile", "author", "date", "date_stayed", "num_helpful_votes", "title"])
-```
-
-##### Hotels Dataset
-Columns with minimal relevance or redundant information are excluded:
-- Dropped columns: `phone`, `details`, `region_id`, `type`, `url`.
-
-```python
-data_hotels = data_hotels.drop(columns=["phone", "details", "region_id", "type", "url"])
-```
-
----
-
-#### 3. Parsing JSON-Like Strings
-
-##### Reviews Dataset
-- The `ratings` column in `data_reviews` contained JSON-like strings.
-- A function, `convert_review_string`, is written to:
-  - Fix malformed JSON strings using regular expressions.
-  - Convert the strings to Python dictionaries.
-
-- The parsed `ratings` data is normalized into separate columns and merged back into the dataset.
-- Dropped irrelevant rating components such as `check_in_front_desk` and `business_service_(e_g_internet_access)`.
-
-```python
-import re
-import json
-
-def fix_json_format(address_string):
-    address_string = re.sub(r"'", r'"', address_string)
-    return address_string
-
-def convert_review_string(address_string):
-    if isinstance(address_string, str):
-        fixed_string = fix_json_format(address_string)
-        return json.loads(fixed_string)
-    return address_string
-
-data_reviews['ratings'] = data_reviews['ratings'].apply(convert_review_string)
-reviews_df = pd.json_normalize(data_reviews['ratings'])
-data_reviews = pd.concat([data_reviews, reviews_df], axis=1)
-data_reviews.drop(columns=['ratings', 'check_in_front_desk', 'business_service_(e_g_internet_access)'], inplace=True)
-```
-
-##### Hotels Dataset
-- Similarly, the `address` column in `data_hotels` contained JSON-like strings.
-- A function, `convert_address_string`, is applied to parse and normalize the data:
-  - Fixed common JSON formatting issues.
-  - Extracted address components (e.g., `street`, `city`, `country`) into separate columns.
-- Dropped the original `address` column post-normalization.
-
-```python
-def fix_json_format(address_string):
-    address_string = re.sub(r"'", r'"', address_string)
-    address_string = re.sub(r'("(?:[^"]|\\.)*?)\'(.*?")', r'\1\2', address_string)
-    return address_string
-
-def convert_address_string(address_string):
-    if isinstance(address_string, str):
-        fixed_string = fix_json_format(address_string)
-        return json.loads(fixed_string)
-    return address_string
-
-# Apply the transformation
-data_hotels['address'] = data_hotels['address'].apply(convert_address_string)
-address_df = pd.json_normalize(data_hotels['address'])
-data_hotels = pd.concat([data_hotels, address_df], axis=1)
-data_hotels.drop(columns=['address'], inplace=True)
-```
-
----
-
-#### 4. Calculating Aggregate Ratings
-
-- Created a new column `rating` in `data_reviews` to store the mean value of multiple rating components:
-  - Included: `service`, `cleanliness`, `overall`, `value`, `location`, `sleep_quality`, `rooms`.
-- After aggregation, the individual rating columns are dropped to reduce redundancy.
-
-```python
-import numpy as np
-
-data_reviews["rating"] = data_reviews[[
-    "service", "cleanliness", "overall", "value",
-    "location", "sleep_quality", "rooms"
-]].mean(axis=1)
-
-data_reviews.drop(columns=["service", "cleanliness", "overall", "value", "location", "sleep_quality", "rooms"], inplace=True)
-```
-
----
-
-#### 5. Merging Datasets
-
-- The `data_reviews` and `data_hotels` datasets are merged on the common key (`offering_id` in reviews and `id` in hotels).
-- To avoid name collisions, a prefix is added to columns:
-  - Columns from `data_hotels`: `hotel_`
-  - Columns from `data_reviews`: `reviews_`
-- Rows with missing values are dropped.
-
-```python
-# Add prefixes to column names for clarity
-hotel_columns = {col: f'hotel_{col}' for col in data_hotels.columns if col != 'offering_id'}
-reviews_columns = {col: f'reviews_{col}' for col in data_reviews.columns if col != 'id'}
-
-data = pd.merge(data_reviews, data_hotels, left_on="offering_id", right_on="id", how="left", suffixes=("_review", "_hotel"))
-data = data.drop(columns=["offering_id"])
-data = data.rename(columns={**hotel_columns, **reviews_columns})
-data = data.dropna()
-```
-
----
-
-#### 6. Final Inspection
-
-- Displayed the first few rows and dataset information to verify preprocessing.
-
-```python
-# Display processed data
-print(data.head())
-print(data.info())
-```
-
----
-
-### Outcome
-- The preprocessing pipeline transformed raw data into a structured format suitable for analysis and modeling.
-- Key transformations included:
-  - Normalizing JSON-like fields into columns.
-  - Aggregating and cleaning ratings.
-  - Merging datasets while ensuring clear column naming.
-- The resulting dataset is ready for model implementation and evaluation.
-
-## BM25 vs. custom model
-
+## Acknowledgments
+This notebook is inspired by the TripAdvisor Recommendation Challenge. Special thanks to the authors of the `rank_bm25` library and contributors to Kaggle for providing datasets and tools.
 
 ## Authors
 - [Bastien Cherel](https://github.com/BastienCherel)
-- [Shangzhi  Lou](https://github.com/ShangzhiLou)
+- [Shangzhi Lou](https://github.com/ShangzhiLou)
 
- 
+---
+
+Feel free to contribute to this project by submitting issues or pull requests!
+
